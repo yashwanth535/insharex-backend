@@ -11,22 +11,9 @@ const app = configureApp();
 
 // Load environment variables
 const PORT = process.env.PORT || 3000;
-const ENV = process.env.NODE_ENV || "development"; // "production" or "development"
 
-let server;
-
-// Use HTTPS in production
-if (ENV === "production") {
-  const options = {
-    key: fs.readFileSync(path.resolve(__dirname, "certs", "privkey.pem")),
-    cert: fs.readFileSync(path.resolve(__dirname, "certs", "fullchain.pem")),
-  };
-  server = https.createServer(options, app);
-  console.log(`✅ Using HTTPS in production`);
-} else {
-  server = http.createServer(app);
-  console.log(`✅ Using HTTP in development`);
-}
+let server = http.createServer(app);
+console.log(`✅ Using HTTP in development`);
 
 // API Routes
 app.use("/api", uploadRoutes);
@@ -49,7 +36,7 @@ app.use((req, res, next) => {
 // Setup WebSockets
 setupWebSocket(server);
 
-server.listen(PORT, () => {
-  console.log(`🚀 Server running at ${ENV === "production" ? "https" : "http"}://localhost:${PORT}`);
-  console.log(`📡 WebSocket Server running at ${ENV === "production" ? "wss" : "ws"}://localhost:${PORT}`);
-});
+server.listen(PORT, () => 
+  console.log(`🚀 Server running at http://localhost:${PORT}`)
+);
+
