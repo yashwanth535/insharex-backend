@@ -1,37 +1,32 @@
 const supabase = require('../config/supabaseConfig');
 const multer = require('multer');
+const path = require('path');
 
-// Configure multer for memory storage
+// Configure multer for memory storage (Supports all file types)
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
-  fileFilter: (req, file, cb) => {
-    if (file.mimetype === 'application/pdf') {
-      cb(null, true);
-    } else {
-      cb(new Error('Only PDF files are allowed!'), false);
-    }
-  },
-}).single('pdf');
+  limits: { fileSize: 50 * 1024 * 1024 }, // 50MB limit
+}).single('file');
 
-const uploadPdf = async (req, res) => {
-  console.log("uploading pdf");
+const uploadFile = async (req, res) => {
+  console.log('Uploading file...');
   upload(req, res, async (err) => {
     try {
-      if (!req.file){
-        console.log("file not found");
+      if (!req.file) {
+        console.log('No file uploaded');
         return res.status(400).json({ error: 'No file uploaded' });
-      } 
+      }
 
       const file = req.file;
       const timestamp = Date.now();
+      const fileExtension = path.extname(file.originalname);
       const fileName = `${timestamp}-${file.originalname}`;
 
-      // Upload file to Supabase Storage (Using "insharex" bucket)
+      // Upload file to Supabase Storage (Bucket: "insharex")
       const { data, error } = await supabase.storage
-        .from('insharex') // Updated bucket name here
+        .from('insharex')
         .upload(fileName, file.buffer, {
-          contentType: 'application/pdf',
+          contentType: file.mimetype,
           cacheControl: '3600',
           upsert: true, // Allows overwriting existing files
         });
@@ -47,6 +42,7 @@ const uploadPdf = async (req, res) => {
       res.status(200).json({
         message: 'File uploaded successfully',
         fileName,
+        fileType: file.mimetype,
         url: publicUrl,
       });
     } catch (error) {
@@ -56,4 +52,4 @@ const uploadPdf = async (req, res) => {
   });
 };
 
-module.exports = { uploadPdf };
+module.exports = { uploadFile };
