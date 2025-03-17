@@ -1,27 +1,55 @@
-const {  configureApp } = require("./config/app.config");
-const uploadRoutes = require('./routes/uploadRoutes');
+require("dotenv").config(); // Load environment variables
+const fs = require("fs");
+const path = require("path");
+const http = require("http");
+const https = require("https");
+const { configureApp } = require("./config/app.config");
+const uploadRoutes = require("./routes/uploadRoutes");
+const { setupWebSocket } = require("./wsHandler"); // Import WebSocket logic
 
 const app = configureApp();
 
-const data = [
-  { id: 1, name: "vishnu", age: 25 },
-  { id: 2, name: "varun", age: 30 },
-  { id: 3, name: "charan", age: 22 }
-];
+// Load environment variables
+const PORT = process.env.PORT || 3000;
+const ENV = process.env.NODE_ENV || "development"; // "production" or "development"
 
+let server;
+
+// Use HTTPS in production
+if (ENV === "production") {
+  const options = {
+    key: fs.readFileSync(path.resolve(__dirname, "certs", "privkey.pem")),
+    cert: fs.readFileSync(path.resolve(__dirname, "certs", "fullchain.pem")),
+  };
+  server = https.createServer(options, app);
+  console.log(`✅ Using HTTPS in production`);
+} else {
+  server = http.createServer(app);
+  console.log(`✅ Using HTTP in development`);
+}
+
+// API Routes
+app.use("/api", uploadRoutes);
+
+// Dummy Users Endpoint
 app.get("/api/users", (req, res) => {
-  res.json(data);
+  res.json([
+    { id: 1, name: "vishnu", age: 25 },
+    { id: 2, name: "varun", age: 30 },
+    { id: 3, name: "charan", age: 22 },
+  ]);
 });
 
+// Middleware for logging requests
 app.use((req, res, next) => {
   console.log(`[${req.method}] ${req.path}`);
   next();
 });
 
-app.use('/api', uploadRoutes);
+// Setup WebSockets
+setupWebSocket(server);
 
-
-const PORT = 3000;
-app.listen(PORT, () => {
-  console.log(`listening to http://localhost:${PORT}`);
+server.listen(PORT, () => {
+  console.log(`🚀 Server running at ${ENV === "production" ? "https" : "http"}://localhost:${PORT}`);
+  console.log(`📡 WebSocket Server running at ${ENV === "production" ? "wss" : "ws"}://localhost:${PORT}`);
 });
