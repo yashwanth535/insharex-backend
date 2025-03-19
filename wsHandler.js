@@ -27,7 +27,7 @@ function setupWebSocket(server) {
                 }
             }
 
-            if (data.type === 'file-meta' || data.type === 'file-chunk') {
+            if (data.type === 'file-meta' || data.type === 'file-chunk' || data.type === 'chunk-ack') {
                 const room = rooms.get(data.roomId);
                 if (room) {
                     const target = ws === room.host ? room.guest : room.host;
