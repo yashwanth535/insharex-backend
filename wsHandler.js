@@ -1,5 +1,4 @@
 const WebSocket = require('ws');
-const { v4: uuidv4 } = require('uuid');
 
 const rooms = new Map();
 
@@ -11,7 +10,7 @@ function setupWebSocket(server) {
             const data = JSON.parse(message);
 
             if (data.type === 'create-room') {
-                const roomId = uuidv4().slice(0, 6);
+                const roomId = Math.floor(100000 + Math.random() * 900000).toString();
                 rooms.set(roomId, { host: ws, guest: null });
                 ws.send(JSON.stringify({ type: 'room-created', roomId }));
             }
@@ -24,6 +23,21 @@ function setupWebSocket(server) {
                     room.guest.send(JSON.stringify({ type: 'peer-joined' }));
                 } else {
                     ws.send(JSON.stringify({ type: 'error', message: 'Room not found or full' }));
+                }
+            }
+
+            if (data.type === 'chat-message') {
+                const room = rooms.get(data.roomId);
+                if (room) {
+                    const target = ws === room.host ? room.guest : room.host;
+                    if (target) {
+                        target.send(JSON.stringify({
+                            type: 'chat-message',
+                            message: data.message,
+                            sender: ws === room.host ? 'Host' : 'Guest',
+                            timestamp: new Date().toISOString()
+                        }));
+                    }
                 }
             }
 
