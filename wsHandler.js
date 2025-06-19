@@ -26,26 +26,29 @@ function setupWebSocket(server) {
                 }
             }
 
-            if (data.type === 'chat-message') {
-                const room = rooms.get(data.roomId);
-                if (room) {
-                    const target = ws === room.host ? room.guest : room.host;
-                    if (target) {
-                        target.send(JSON.stringify({
-                            type: 'chat-message',
-                            message: data.message,
-                            sender: ws === room.host ? 'Host' : 'Guest',
-                            timestamp: new Date().toISOString()
-                        }));
-                    }
-                }
-            }
-
-            if (data.type === 'file-meta' || data.type === 'file-chunk' || data.type === 'chunk-ack') {
+            // Relay signaling messages (SDP, ICE) between peers
+            if (data.type === 'signal') {
                 const room = rooms.get(data.roomId);
                 if (room) {
                     const target = ws === room.host ? room.guest : room.host;
                     if (target) target.send(JSON.stringify(data));
+                }
+            }
+
+            // Relay chat messages between peers
+            if (data.type === 'chat-message') {
+                const room = rooms.get(data.roomId);
+                if (room) {
+                    if (room.host && room.host !== ws) {
+                        room.host.send(JSON.stringify(data));
+                        console.log('[WS] Relayed chat-message to host:', data);
+                    }
+                    if (room.guest && room.guest !== ws) {
+                        room.guest.send(JSON.stringify(data));
+                        console.log('[WS] Relayed chat-message to guest:', data);
+                    }
+                } else {
+                    console.warn('[WS] chat-message: Room not found for', data.roomId);
                 }
             }
         });
@@ -59,7 +62,7 @@ function setupWebSocket(server) {
         });
     });
 
-    console.log('WebSocket server initialized');
+    console.log('WebSocket signaling server initialized');
 }
 
 module.exports = { setupWebSocket };
