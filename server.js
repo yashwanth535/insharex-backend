@@ -18,13 +18,8 @@ console.log(`✅ Using HTTP in development`);
 // API Routes
 app.use("/api", uploadRoutes);
 
-// Dummy Users Endpoint
-app.get("/api/users", (req, res) => {
-  res.json([
-    { id: 1, name: "vishnu", age: 25 },
-    { id: 2, name: "varun", age: 30 },
-    { id: 3, name: "charan", age: 22 },
-  ]);
+app.get("/trigger", (req, res) => {
+  res.send("triggered")
 });
 
 // Middleware for logging requests
