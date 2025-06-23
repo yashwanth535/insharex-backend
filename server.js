@@ -19,8 +19,9 @@ console.log(`✅ Using HTTP in development`);
 app.use("/api", uploadRoutes);
 
 app.get("/trigger", (req, res) => {
-  res.send("triggered")
+  res.status(204).end(); 
 });
+
 
 // Middleware for logging requests
 app.use((req, res, next) => {
