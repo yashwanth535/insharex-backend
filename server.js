@@ -16,13 +16,13 @@ let server = http.createServer(app);
 console.log(`✅ Using HTTP in development`);
 
 // API Routes
-app.use("/api", uploadRoutes);
+// app.use("/api", uploadRoutes);
 
 app.get("/ping", (req, res) => {
   res.status(204).end(); 
 });
 
-app.get("api/ping", (req, res) => {
+app.get("/api/ping", (req, res) => {
   res.send("man of the math of the tournament of the cricket")
 });
 
