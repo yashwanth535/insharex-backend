@@ -18,8 +18,12 @@ console.log(`✅ Using HTTP in development`);
 // API Routes
 app.use("/api", uploadRoutes);
 
-app.get("/trigger", (req, res) => {
+app.get("/ping", (req, res) => {
   res.status(204).end(); 
+});
+
+app.get("api/ping", (req, res) => {
+  res.send("man of the math of the tournament of the cricket")
 });
 
 
